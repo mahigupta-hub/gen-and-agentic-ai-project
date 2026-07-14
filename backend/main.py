@@ -1,56 +1,76 @@
+import sys
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+# -----------------------------------------------------------------------
+# 1. PYTHON PATH RESOLUTION (So backend can see the RAG folder)
+# -----------------------------------------------------------------------
+# Find where main.py is, go up one level to the root project folder, and add it to Python's memory
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.dirname(CURRENT_DIR)
+sys.path.append(ROOT_DIR)
+
+# Import your partner's RAGIndex class from RAG/rag_module.py
+from RAG.rag_module import RAGIndex
+
 app = FastAPI(title="Academic Tutor API")
 
-# This tells the server to allow requests from other websites
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # The "*" means "allow any website" for now
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all types of requests (POST, GET, etc.)
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ---------------------------------------------------------
-# 1. THE DATA RULES (Contracts)
-# ---------------------------------------------------------
-# This forces the Frontend to send a user_id and a message
+# -----------------------------------------------------------------------
+# 2. INITIALIZE THE RAG ENGINE ON STARTUP
+# -----------------------------------------------------------------------
+# Point directly to where the 'saved_index' folder lives inside the RAG directory
+RAG_INDEX_PATH = os.path.join(ROOT_DIR, "RAG", "saved_index")
+
+rag = RAGIndex()
+
+try:
+    # Load the database once when the server starts up so it stays fast
+    rag.load(RAG_INDEX_PATH)
+    print("🚀 SUCCESS: RAG Index loaded perfectly into Backend!")
+except Exception as e:
+    print(f"⚠️ WARNING: Could not load RAG index: {e}")
+    print("Make sure your partner ran 'python RAG/rag_module.py' first to generate the index data!")
+
+# -----------------------------------------------------------------------
+# 3. DATA CONTRACTS & ENDPOINTS
+# -----------------------------------------------------------------------
 class ChatRequest(BaseModel):
     user_id: str
     message: str
 
-# This forces your server to reply with a status and a response
 class ChatResponse(BaseModel):
     status: str
     bot_response: str
 
-# ---------------------------------------------------------
-# 2. THE DUMMY AI (Your temporary placeholder)
-# ---------------------------------------------------------
-# You will delete this function later when the AI team is done.
-def get_fake_ai_answer(user_message: str) -> str:
-    print(f"Backend received the message: {user_message}")
-    
-    # We return a fake string just to prove the server works
-    return f"This is a fake AI answer. You asked: {user_message}"
-
-# ---------------------------------------------------------
-# 3. THE SERVER ENDPOINT (The Waiter)
-# ---------------------------------------------------------
 @app.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(request: ChatRequest):
-    
-    # 1. Read what the frontend sent
     incoming_text = request.message
     
-    # 2. Send it to our dummy function (for now)
-    # LATER: You will change this to the AI team's real function
-    answer = get_fake_ai_answer(incoming_text)
-    
-    # 3. Package it up and send it back to the frontend
+    try:
+        # Ask her RAG engine to find the top 2 closest paragraphs from the PDF
+        matched_chunks = rag.retrieve(incoming_text, k=2)
+        
+        if not matched_chunks:
+            bot_answer = "I searched the documents but couldn't find any information relevant to your question."
+        else:
+            # Stitched text chunks serve as a highly functional placeholder 
+            # until the AI Features teammate provides the clean LLM text wrapper
+            bot_answer = "\n\n".join([f"[From Page {c['page']}]: {c['text']}" for c in matched_chunks])
+            
+    except Exception as e:
+        bot_answer = f"The RAG engine encountered an issue processing your request: {str(e)}"
+        
     return ChatResponse(
         status="success",
-        bot_response=answer
+        bot_response=bot_answer
     )
