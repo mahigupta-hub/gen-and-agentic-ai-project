@@ -197,6 +197,72 @@
 
 </div>
 
+<script>
+    const chatBox = document.querySelector('.chat-box');
+    const inputField = document.querySelector('.input-area input');
+    const sendBtn = document.querySelector('.input-area button');
+    const typingIndicator = document.querySelector('.typing');
+
+    typingIndicator.style.display = 'none';
+
+    function appendMessage(text, sender) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = sender === 'user' ? 'user-msg' : 'ai-msg';
+        msgDiv.innerHTML = text.replace(/\n/g, '<br>');
+        chatBox.insertBefore(msgDiv, typingIndicator);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    async function handleSendMessage() {
+        const messageText = inputField.value.trim();
+        if (!messageText) return; 
+
+        appendMessage(messageText, 'user');
+        inputField.value = '';
+
+        inputField.disabled = true;
+        sendBtn.disabled = true;
+        typingIndicator.style.display = 'block';
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        try {
+            const response = await fetch("http://127.0.0.1:8000/chat", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ 
+                    user_id: "student_1", // Added to match your ChatRequest model
+                    message: messageText  // Changed to 'message' to match your model
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                // Changed from data.response to data.bot_response to match your Python return
+                appendMessage(data.bot_response, 'ai'); 
+            } else {
+                appendMessage("❌ Error: The server encountered an issue processing that request.", 'ai');
+            }
+        } catch (error) {
+            console.error("Connection Error:", error);
+            appendMessage("❌ Connection Error: Could not reach the backend server. Is it running?", 'ai');
+        } finally {
+            typingIndicator.style.display = 'none';
+            inputField.disabled = false;
+            sendBtn.disabled = false;
+            inputField.focus(); 
+        }
+    }
+
+    sendBtn.addEventListener('click', handleSendMessage);
+
+    inputField.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            handleSendMessage();
+        }
+    });
+</script>
 </body>
 
 </html>

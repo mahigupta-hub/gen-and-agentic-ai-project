@@ -93,5 +93,49 @@
 
 </div>
 
+<script>
+    const uploadBtn = document.getElementById('upload-btn');
+    const fileInput = document.getElementById('pdfFile');
+
+    uploadBtn.addEventListener('click', async () => {
+        // 1. Check if the user actually selected a file
+        const file = fileInput.files[0];
+        if (!file) {
+            alert("Please select a PDF first!");
+            return;
+        }
+
+        // 2. Package the file to send to FastAPI
+        const formData = new FormData();
+        formData.append("file", file); // Perfectly matches your FastAPI parameter: file: UploadFile
+
+        // 3. Update the button so the user knows it's working
+        uploadBtn.innerText = "Uploading... ⏳";
+        uploadBtn.disabled = true;
+
+        try {
+            // 4. Send it to your local FastAPI server endpoint
+            const response = await fetch("http://127.0.0.1:8000/upload-pdf", {
+                method: "POST",
+                body: formData
+            });
+
+            if (response.ok) {
+                alert("PDF successfully uploaded and processed! 🚀");
+                // Automatically redirect them to the chat page
+                window.location.href = "chat.html"; 
+            } else {
+                alert("Error processing the PDF. Check the server terminal.");
+            }
+        } catch (error) {
+            console.error("Connection Error:", error);
+            alert("Failed to connect to the backend. Is the server running?");
+        } finally {
+            // Reset the button state
+            uploadBtn.innerText = "Upload PDF";
+            uploadBtn.disabled = false;
+        }
+    });
+</script>
 </body>
 </html>
