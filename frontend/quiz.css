@@ -1,0 +1,290 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+font-family:'Playfair Display',serif;
+}
+
+body{
+    height:100vh;
+    background: linear-gradient(
+        135deg,
+        #fdf5f8 0%,
+        #fbcfdf 50%,
+        #f182a2 100%
+    );
+}
+
+.container{
+    display:flex;
+    height:100vh;
+}
+
+/* Sidebar */
+
+.sidebar{
+    width:260px;
+    background:rgba(255,255,255,.25);
+    backdrop-filter:blur(15px);
+    border-right:1px solid rgba(255,255,255,.3);
+    padding:30px;
+    display:flex;
+    flex-direction:column;
+}
+
+.sidebar h2{
+    color:#c21e56;
+    margin-bottom:35px;
+}
+
+.sidebar a{
+    text-decoration:none;
+    color:#333;
+}
+
+.new-chat{
+    width:100%;
+    padding:15px;
+    border:none;
+    border-radius:12px;
+    background:#c52c62;
+    color:white;
+    font-size:17px;
+    cursor:pointer;
+    margin-bottom:35px;
+    transition:.3s;
+}
+
+.new-chat:hover{
+    background:#b01752;
+}
+
+.menu{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+}
+
+.item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:15px 18px;
+    border-radius:14px;
+    transition:.3s;
+    font-size:18px;
+}
+
+.item:hover{
+    background:white;
+    box-shadow:0 5px 15px rgba(0,0,0,.08);
+}
+
+.active{
+    background:white;
+    color:#c21e56;
+    font-weight:bold;
+    box-shadow:0 5px 15px rgba(0,0,0,.08);
+}
+
+/* Profile */
+
+.profile{
+    margin-top:auto;
+    display:flex;
+    align-items:center;
+    gap:15px;
+}
+
+.avatar{
+    width:55px;
+    height:55px;
+    border-radius:50%;
+    background:#e83e8c;
+    color:white;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-weight:bold;
+    font-size:18px;
+}
+
+.profile h4{
+    color:#b01752;
+}
+
+.profile p{
+    color:#666;
+    font-size:14px;
+}
+
+/* Main */
+
+.main{
+    flex:1;
+    padding:35px;
+    display:flex;
+    flex-direction:column;
+}
+
+.topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:25px;
+}
+
+.topbar h1{
+    font-size:38px;
+    color:#b01752;
+}
+
+.subtitle{
+    color:#555;
+    margin-top:8px;
+}
+
+.pdf{
+    background:white;
+    padding:12px 22px;
+    border-radius:30px;
+    box-shadow:0 5px 15px rgba(0,0,0,.08);
+    font-weight:600;
+}
+
+/* Quiz Box */
+
+.quiz-box{
+    flex:1;
+    background:rgba(255,255,255,.45);
+    backdrop-filter:blur(15px);
+    border-radius:25px;
+    padding:35px;
+    overflow-y:auto;
+    box-shadow:0 10px 25px rgba(0,0,0,.08);
+}
+
+.question{
+    background:white;
+    padding:30px;
+    border-radius:20px;
+    margin-bottom:25px;
+    box-shadow:0 8px 18px rgba(0,0,0,.08);
+}
+
+.question h2{
+    color:#85163d;
+    margin-bottom:25px;
+    font-size:26px;
+}
+
+.option{
+    display:block;
+    background:#fff5f9;
+    border:2px solid transparent;
+    padding:15px 20px;
+    border-radius:12px;
+    margin-bottom:15px;
+    cursor:pointer;
+    transition:.3s;
+    font-size:17px;
+}
+
+.option:hover{
+    background:#e83e8c;
+    color:white;
+}
+
+.option input{
+    margin-right:12px;
+}
+
+/* Score Card */
+
+.score-card{
+    margin-top:20px;
+    background:white;
+    border-radius:20px;
+    padding:25px;
+    text-align:center;
+    box-shadow:0 8px 18px rgba(0,0,0,.08);
+}
+
+.score-card h2{
+    color:#c21e56;
+    margin-bottom:10px;
+}
+
+.score-card p{
+    font-size:20px;
+    color:#444;
+}
+
+/* Buttons */
+
+.buttons{
+    display:flex;
+    justify-content:center;
+    gap:18px;
+    margin-top:30px;
+    flex-wrap:wrap;
+}
+
+.buttons a{
+    text-decoration:none;
+}
+
+.buttons button{
+    padding:15px 30px;
+    border:none;
+    border-radius:35px;
+    background:#c21e56;
+    color:white;
+    font-size:16px;
+    cursor:pointer;
+    transition:.3s;
+}
+
+.buttons button:hover{
+    background:#b01752;
+    transform:translateY(-3px);
+}
+
+/* Scrollbar */
+
+::-webkit-scrollbar{
+    width:8px;
+}
+
+::-webkit-scrollbar-thumb{
+    background:#d45b90;
+    border-radius:20px;
+}
+
+::-webkit-scrollbar-track{
+    background:transparent;
+}
+
+/* Responsive */
+
+@media(max-width:900px){
+
+    .sidebar{
+        display:none;
+    }
+
+    .main{
+        padding:20px;
+    }
+
+    .topbar{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:15px;
+    }
+
+    .buttons{
+        justify-content:center;
+    }
+
+}
