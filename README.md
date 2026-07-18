@@ -66,7 +66,7 @@ Responsible for:
 
 Responsible for:
 
-- Backend APIs
+- Backend APIs (FastAPI)
 - Connecting Frontend with AI Modules
 - Handling Requests & Responses
 - Project Integration
@@ -95,7 +95,7 @@ Responsible for:
 
 ## 🤖 AI Features – Kashish Kumari
 
-Implemented using **Python** and **Google Gemini API**.
+Implemented using **Python** and **Groq API**.
 
 ### AI Features
 
@@ -108,7 +108,7 @@ Implemented using **Python** and **Google Gemini API**.
 ### Technologies Used
 
 - Python
-- Google Gemini API
+- Groq API
 - python-dotenv
 
 ---
@@ -116,7 +116,8 @@ Implemented using **Python** and **Google Gemini API**.
 # 🛠️ Technologies Used
 
 - Python
-- Google Gemini API
+- FastAPI & Uvicorn
+- Groq API
 - HTML
 - CSS
 - Git
@@ -130,12 +131,14 @@ Implemented using **Python** and **Google Gemini API**.
 ```text
 gen-and-agentic-ai-project/
 │
-├── ai_client.py
-├── qa.py
-├── summary.py
-├── quiz.py
-├── flashcards.py
-├── study_plan.py
+├── ai_features/
+│   ├── ai_client.py
+│   ├── qa.py
+│   ├── summary.py
+│   ├── quiz.py
+│   ├── flashcards.py
+│   └── study_plan.py
+│
 ├── main.py
 ├── requirements.txt
 ├── README.md
@@ -168,13 +171,13 @@ pip install -r requirements.txt
 ## Create .env File
 
 ```env
-GEMINI_API_KEY=YOUR_API_KEY
+GROQ_API_KEY=YOUR_API_KEY
 ```
 
 ## Run the Project
 
 ```bash
-python main.py
+uvicorn main:app --reload
 ```
 
 ---
@@ -198,7 +201,7 @@ python main.py
       RAG ----------------------┘
                   │
                   ▼
-             Google Gemini AI
+             Groq AI
                   │
                   ▼
          Generated Response
