@@ -131,19 +131,16 @@ Implemented using **Python** and **Groq API**.
 ```text
 gen-and-agentic-ai-project/
 │
-├── ai_features/
-│   ├── ai_client.py
-│   ├── qa.py
-│   ├── summary.py
-│   ├── quiz.py
-│   ├── flashcards.py
-│   └── study_plan.py
+├── ai_features/          # AI logic (QA, Summary, Flashcards, etc.)
+├── backend/              # Server setup and main API entry point
+├── frontend/             # User interface (HTML, CSS, Images)
+├── pdf_processing/       # PDF reading and text extraction
+├── RAG/                  # Context retrieval and data indexing
 │
-├── main.py
-├── requirements.txt
-├── README.md
 ├── .gitignore
-└── .env
+├── .env
+├── README.md
+└── requirements.txt
 ```
 
 ---
