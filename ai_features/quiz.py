@@ -1,4 +1,4 @@
-from ai_client import ask_ai
+from .ai_client import ask_ai
 
 def generate_quiz(text):
 

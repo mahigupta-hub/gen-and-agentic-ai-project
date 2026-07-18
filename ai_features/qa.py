@@ -1,5 +1,4 @@
-from ai_client import ask_ai
-
+from .ai_client import ask_ai
 def answer_question(context, question):
 
     prompt = f"""
