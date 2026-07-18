@@ -1,4 +1,6 @@
-venv/
-__pycache__/
-*.pyc
 .env
+tutor.env
+*.code-workspace
+*.pyc
+__pycache__/
+venv/
