@@ -1,7 +1,6 @@
 """
 RAG Module — Embeddings + Vector Search (FAISS)
 =================================================
-This is YOUR piece of the AI Tutor project.
 
 WHAT THIS FILE DOES:
 1. Takes text chunks (from the PDF-processing teammate)
@@ -23,26 +22,25 @@ INSTALL FIRST (run this in your terminal):
 
 import os
 import json
-from sentence_transformers import SentenceTransformer
 import faiss
 import numpy as np
 
-# -----------------------------------------------------------------------
-# STEP 1: Load the embedding model
-# -----------------------------------------------------------------------
-# 'all-MiniLM-L6-v2' is small, free, runs fine on a normal laptop CPU
-# (no GPU needed), and is the most commonly used starter model for RAG.
-# The first time you run this, it downloads automatically (~80MB).
-EMBEDDING_MODEL = SentenceTransformer('all-MiniLM-L6-v2')
+# --- 1. NEW: Import the Serverless Inference Client ---
+from huggingface_hub import InferenceClient
 
-# This model always produces vectors of this exact length.
-# We use this to sanity-check saved indexes on load (see load() below).
-EMBEDDING_DIM = EMBEDDING_MODEL.get_sentence_embedding_dimension()
+# -----------------------------------------------------------------------
+# STEP 1: Set up the Serverless AI Model
+# -----------------------------------------------------------------------
+# We define the model name, but we DO NOT download it locally anymore.
+MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 
-# If the best match for a question scores below this, we treat it as
-# "nothing relevant found" instead of confidently returning a bad answer.
-# Cosine similarity ranges roughly -1 to 1; 0.3 is a conservative floor
-# for a small model like this one. Tune this after testing real questions.
+# all-MiniLM-L6-v2 always produces vectors of this exact length (384).
+EMBEDDING_DIM = 384
+
+# Initialize the Hugging Face client (Zero RAM usage!)
+# It automatically picks up the HF_TOKEN from your environment variables.
+hf_client = InferenceClient(token=os.getenv("HF_TOKEN"))
+
 DEFAULT_MIN_SCORE = 0.3
 
 
@@ -60,13 +58,7 @@ class RAGIndex:
     # Internal helper: clean up raw chunks before we ever embed them
     # ------------------------------------------------------------------
     def _clean_chunks(self, chunks):
-        """
-        Filters out chunks that would silently break or degrade retrieval:
-        - missing/empty/whitespace-only text
-        - exact duplicate text (common with buggy PDF extraction)
-
-        Returns a new, cleaned list. Never modifies the input list.
-        """
+        """ Filters out chunks that would silently break or degrade retrieval """
         if not isinstance(chunks, list) or len(chunks) == 0:
             raise ValueError(
                 "build_index() expects a non-empty list of chunk dicts, "
@@ -116,27 +108,28 @@ class RAGIndex:
     def build_index(self, chunks):
         """
         Takes the chunks from PDF processing and builds a searchable index.
-
-        chunks: list of dicts, e.g.
-            [{"chunk_id": 1, "text": "Newton's first law states...", "page": 3}, ...]
-
-        Raises ValueError with a clear message if the input is malformed.
         """
         self.chunks = self._clean_chunks(chunks)
-
         texts = [c["text"] for c in self.chunks]
 
-        # Turn every chunk of text into a vector (embedding).
-        # Output shape: (number_of_chunks, 384) -- 384 numbers per chunk
-        # for this particular model.
-        embeddings = EMBEDDING_MODEL.encode(texts, convert_to_numpy=True)
-        embeddings = embeddings.astype("float32")
+        # --- 2. NEW: Get embeddings via API instead of local RAM ---
+        print(f"[RAG] Generating embeddings via Hugging Face API for {len(texts)} chunks...")
+        
+        # We process them in a loop to avoid overloading the free API payload limits
+        raw_embeddings = []
+        for text in texts:
+            # Calls Hugging Face servers for a single text chunk
+            emb = hf_client.feature_extraction(text, model=MODEL_NAME)
+            raw_embeddings.append(emb)
+
+        # Convert the API response into the exact float32 numpy array FAISS needs
+        # Output shape: (number_of_chunks, 384)
+        embeddings = np.array(raw_embeddings).astype("float32")
 
         # Normalize vectors so we can use cosine similarity via inner product.
         faiss.normalize_L2(embeddings)
 
-        dimension = embeddings.shape[1]        # 384 for this model
-        self.index = faiss.IndexFlatIP(dimension)
+        self.index = faiss.IndexFlatIP(EMBEDDING_DIM)
         self.index.add(embeddings)
 
         print(f"[RAG] Indexed {len(self.chunks)} chunks (from {len(chunks)} received).")
@@ -144,16 +137,6 @@ class RAGIndex:
     def retrieve(self, question, k=3, min_score=DEFAULT_MIN_SCORE):
         """
         Given a student's question, return the top-k most relevant chunks.
-
-        question: string, e.g. "How does photosynthesis work?"
-        k: how many chunks to retrieve (3 is a reasonable default)
-        min_score: chunks scoring below this are considered irrelevant and
-                   dropped. Pass min_score=0 to disable this filter.
-
-        Returns: list of dicts, same shape as input chunks, most relevant first.
-                 Returns an empty list if nothing meets min_score --
-                 callers (AI-features teammate) should handle that case,
-                 e.g. by saying "I couldn't find that in the material."
         """
         if self.index is None:
             raise ValueError("Index not built yet. Call build_index() or load() first.")
@@ -161,7 +144,13 @@ class RAGIndex:
         if not question or not str(question).strip():
             raise ValueError("retrieve() got an empty question.")
 
-        q_vector = EMBEDDING_MODEL.encode([question], convert_to_numpy=True).astype("float32")
+        # --- 3. NEW: Get the question embedding via API ---
+        raw_q_emb = hf_client.feature_extraction(question, model=MODEL_NAME)
+        
+        # Convert API response to float32 numpy array. 
+        # FAISS expects a 2D array for searches, e.g., shape (1, 384)
+        q_vector = np.array([raw_q_emb]).astype("float32")
+        
         faiss.normalize_L2(q_vector)
 
         scores, positions = self.index.search(q_vector, k)
@@ -179,12 +168,7 @@ class RAGIndex:
         return results
 
     def save(self, folder_path):
-        """
-        Saves the FAISS index + chunk data to disk, so you don't have to
-        rebuild (re-embed everything) every time your app starts.
-
-        folder_path: e.g. "saved_index"
-        """
+        """ Saves the FAISS index + chunk data to disk """
         if self.index is None:
             raise ValueError("Nothing to save yet -- call build_index() first.")
 
@@ -195,20 +179,14 @@ class RAGIndex:
         with open(os.path.join(folder_path, "chunks.json"), "w", encoding="utf-8") as f:
             json.dump(self.chunks, f)
 
-        # Record which embedding model + dimension built this index, so load()
-        # can catch the case where someone later swaps embedding models and
-        # the old saved index would otherwise fail with a confusing error.
-        meta = {"embedding_dim": EMBEDDING_DIM, "model_name": "all-MiniLM-L6-v2"}
+        meta = {"embedding_dim": EMBEDDING_DIM, "model_name": MODEL_NAME}
         with open(os.path.join(folder_path, "meta.json"), "w", encoding="utf-8") as f:
             json.dump(meta, f)
 
         print(f"[RAG] Saved index + {len(self.chunks)} chunks to '{folder_path}/'")
 
     def load(self, folder_path):
-        """
-        Loads a previously saved index + chunks from disk.
-        Use this instead of build_index() when you already built it before.
-        """
+        """ Loads a previously saved index + chunks from disk. """
         index_path = os.path.join(folder_path, "index.faiss")
         chunks_path = os.path.join(folder_path, "chunks.json")
         meta_path = os.path.join(folder_path, "meta.json")
@@ -219,9 +197,6 @@ class RAGIndex:
                 "Call build_index() and save() first."
             )
 
-        # Guard against loading an index built with a different embedding
-        # model -- vector dimensions wouldn't match and FAISS would either
-        # error confusingly or silently return garbage results.
         if os.path.exists(meta_path):
             with open(meta_path, "r", encoding="utf-8") as f:
                 meta = json.load(f)
@@ -240,9 +215,8 @@ class RAGIndex:
 
         print(f"[RAG] Loaded index with {len(self.chunks)} chunks from '{folder_path}/'")
 
-
 # -----------------------------------------------------------------------
-# EXAMPLE / TEST -- run this file directly to see it work:  python rag_module.py
+# EXAMPLE / TEST
 # -----------------------------------------------------------------------
 if __name__ == "__main__":
     INDEX_FOLDER = "saved_index"
@@ -250,8 +224,6 @@ if __name__ == "__main__":
 
     rag = RAGIndex()
 
-    # If we've already built + saved an index before, just load it (fast).
-    # Otherwise, build it from scratch from the sample data (slower, one-time).
     if os.path.exists(os.path.join(INDEX_FOLDER, "index.faiss")):
         rag.load(INDEX_FOLDER)
     else:
@@ -262,7 +234,7 @@ if __name__ == "__main__":
 
     test_questions = [
         "How do plants make food from sunlight?",
-        "What is the capital of France?",   # deliberately irrelevant -- should return nothing
+        "What is the capital of France?",
     ]
 
     for test_question in test_questions:
