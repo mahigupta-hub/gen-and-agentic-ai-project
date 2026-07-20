@@ -1,3 +1,4 @@
+import uvicorn
 import sys
 import os
 from dotenv import load_dotenv
@@ -41,14 +42,22 @@ app.add_middleware(
 # 2. INITIALIZE THE RAG ENGINE
 # -----------------------------------------------------------------------
 RAG_INDEX_PATH = os.path.join(ROOT_DIR, "RAG", "saved_index")
-rag = RAGIndex()
+_rag_instance = None
 
-try:
-    rag.load(RAG_INDEX_PATH)
-    print("🚀 SUCCESS: RAG Index loaded perfectly into Backend!")
-except Exception as e:
-    print(f"⚠️ WARNING: Could not load RAG index: {e}")
-    print("This is normal if no PDF has been uploaded yet!")
+def get_rag():
+    global _rag_instance
+    if _rag_instance is not None:
+        return _rag_instance
+    
+    print("🧠 Loading RAG Index into memory for the first time...")
+    rag = RAGIndex()
+    try:
+        rag.load(RAG_INDEX_PATH)
+        _rag_instance = rag
+        return _rag_instance
+    except Exception as e:
+        print(f"Error loading RAG: {e}")
+        return None
 
 # -----------------------------------------------------------------------
 # 3. PYDANTIC MODELS FOR REQUESTS
@@ -102,6 +111,11 @@ async def upload_pdf_endpoint(file: UploadFile = File(...)):
             else:
                 extracted_chunks.append(chunk_data)
         
+        # --- FIX: GET THE RAG ENGINE SAFELY ---
+        # If get_rag() returns None (because index doesn't exist), 
+        # we create a fresh RAGIndex() so we can build a new one.
+        rag = get_rag() or RAGIndex() 
+        
         print("🧠 Building AI Search Index...")
         rag.build_index(extracted_chunks)
         rag.save(RAG_INDEX_PATH)
@@ -120,17 +134,19 @@ async def upload_pdf_endpoint(file: UploadFile = File(...)):
 async def chat_endpoint(request: ChatRequest):
     incoming_text = request.message
     
+    # 1. FETCH THE RAG ENGINE (This triggers the lazy load)
+    rag = get_rag()
+    if not rag:
+        return ChatResponse(status="error", bot_response="The AI index is not loaded. Please upload a document first.")
+    
     try:
-        # 1. Retrieve the most relevant chunks from RAG based on user question
+        # 2. NOW you can use rag.retrieve safely
         matched_chunks = rag.retrieve(incoming_text, k=3)
         
         if not matched_chunks:
             bot_answer = "I searched the documents but couldn't find any information relevant to your question."
         else:
-            # 2. Combine the retrieved chunks into one large context string
             context_text = "\n\n".join([c.get('text', '') for c in matched_chunks])
-            
-            # 3. Pass the combined context and the user's question to your teammate's AI function
             bot_answer = answer_question(context=context_text, question=incoming_text)
             
     except Exception as e:
@@ -175,3 +191,8 @@ async def get_study_plan_endpoint(request: StudyPlanRequest):
         return {"status": "success", "data": ai_result}
     except Exception as e:
         return {"status": "error", "message": str(e)}
+    
+if __name__ == "__main__":
+    # This allows Render to tell your app which port to use
+    port = int(os.environ.get("PORT", 10000)) 
+    uvicorn.run(app, host="0.0.0.0", port=port)
