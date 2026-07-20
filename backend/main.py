@@ -141,7 +141,7 @@ async def chat_endpoint(request: ChatRequest):
     
     try:
         # 2. NOW you can use rag.retrieve safely
-        matched_chunks = rag.retrieve(incoming_text, k=3)
+        matched_chunks = rag.retrieve(incoming_text, k=8)
         
         if not matched_chunks:
             bot_answer = "I searched the documents but couldn't find any information relevant to your question."
