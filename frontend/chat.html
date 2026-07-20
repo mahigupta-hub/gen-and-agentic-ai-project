@@ -226,20 +226,20 @@
         chatBox.scrollTop = chatBox.scrollHeight;
 
         try {
-            const response = await fetch("http://127.0.0.1:8000/chat", {
+            // Updated to point to your live Render backend
+            const response = await fetch("https://gen-and-agentic-ai-project.onrender.com/chat", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({ 
-                    user_id: "student_1", // Added to match your ChatRequest model
-                    message: messageText  // Changed to 'message' to match your model
+                    user_id: "student_1", 
+                    message: messageText  
                 })
             });
 
             if (response.ok) {
                 const data = await response.json();
-                // Changed from data.response to data.bot_response to match your Python return
                 appendMessage(data.bot_response, 'ai'); 
             } else {
                 appendMessage("❌ Error: The server encountered an issue processing that request.", 'ai');

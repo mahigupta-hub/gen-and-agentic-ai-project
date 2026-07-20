@@ -114,8 +114,8 @@
         uploadBtn.disabled = true;
 
         try {
-            // 4. Send it to your local FastAPI server endpoint
-            const response = await fetch("http://127.0.0.1:8000/upload-pdf", {
+            // 4. Send it to your LIVE FastAPI server endpoint
+            const response = await fetch("https://gen-and-agentic-ai-project.onrender.com/upload-pdf", {
                 method: "POST",
                 body: formData
             });
