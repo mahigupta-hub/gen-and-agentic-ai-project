@@ -19,4 +19,4 @@ Rules:
 - Keep the answer simple and accurate.
 """
 
-    return ask_ai(prompt)
+    return ask_ai(prompt, max_tokens=1000)
