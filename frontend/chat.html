@@ -197,6 +197,7 @@
 
 </div>
 
+<script src="config.js"></script>
 <script>
     const chatBox = document.querySelector('.chat-box');
     const inputField = document.querySelector('.input-area input');
@@ -227,7 +228,7 @@
 
         try {
             // Updated to point to your live Render backend
-            const response = await fetch("https://gen-and-agentic-ai-project.onrender.com/chat", {
+            const response = await fetch(`${API_URL}/chat`, { 
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"

@@ -1,0 +1,1 @@
+const API_URL = "https://your-backend-url-on-render.com";
