@@ -1,1 +1,1 @@
-const API_URL = "https://your-backend-url-on-render.com";
+const API_URL = "https://gen-and-agentic-ai-project.onrender.com";
