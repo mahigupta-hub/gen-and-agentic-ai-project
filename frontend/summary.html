@@ -88,12 +88,16 @@
 
     async function loadSummary() {
         try {
+            // Grab text if saved during upload, otherwise send empty string to let backend use RAG index
+            const pdfText = localStorage.getItem("extracted_pdf_text") || "";
+
             const response = await fetch(`${API_URL}/summary`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({ 
+                    text: pdfText,          // <--- ADDED FIX HERE
                     user_id: "student_1" 
                 })
             });
@@ -107,8 +111,8 @@
             // Clear loading text
             summaryBox.innerHTML = '';
 
-            // Assuming your backend returns a JSON with a "summary" key or just the text
-            const summaryContent = data.summary || data;
+            // Extracts summary string from response object
+            const summaryContent = data.summary || data.data || data;
 
             if (!summaryContent) {
                 summaryBox.innerHTML = `<p style="color: #666; text-align: center;">No summary could be generated for this PDF.</p>`;
@@ -116,13 +120,12 @@
             }
 
             // Save the text for the Copy button
-            rawSummaryText = typeof summaryContent === 'string' ? summaryContent : JSON.stringify(summaryContent);
+            rawSummaryText = typeof summaryContent === 'string' ? summaryContent : JSON.stringify(summaryContent, null, 2);
 
             // Create the summary card dynamically
             const summaryCard = document.createElement('div');
             summaryCard.className = 'summary-card';
             
-            // Simple text rendering (can be expanded if your backend returns structured data like terms/tips)
             summaryCard.innerHTML = `
                 <h2>Document Summary</h2>
                 <p style="white-space: pre-wrap; line-height: 1.6;">${rawSummaryText}</p>

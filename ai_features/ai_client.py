@@ -8,8 +8,8 @@ client = Groq(
     api_key=os.getenv("GROQ_API_KEY")
 )
 
-# Added max_tokens parameter with a default of 1000
-def ask_ai(prompt, max_tokens=1000): 
+# Increased default max_tokens to 4096 to prevent cut-off responses
+def ask_ai(prompt, max_tokens=4096): 
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[

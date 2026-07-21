@@ -95,12 +95,16 @@
 
     async function loadQuiz() {
         try {
+            // Optional: Grab text if you saved it during upload, otherwise send an empty string so the backend auto-pulls from RAG
+            const pdfText = localStorage.getItem("extracted_pdf_text") || "";
+
             const response = await fetch(`${API_URL}/quiz`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({ 
+                    text: pdfText,         // <--- ADDED FIX HERE
                     user_id: "student_1" 
                 })
             });

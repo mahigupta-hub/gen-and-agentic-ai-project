@@ -1,20 +1,46 @@
+import json
 from .ai_client import ask_ai
 
 def generate_flashcards(text):
-
     prompt = f"""
 You are an AI tutor.
-
-Create 10 flashcards.
+Create 10 flashcards based on the notes provided.
 
 Rules:
 - Each flashcard must have one Question and one Answer.
-- Keep answers short.
+- Keep answers short and concise.
 - Cover all important concepts.
+- YOU MUST OUTPUT STRICTLY IN JSON FORMAT.
+- Do not include any intro, outro, explanations, or markdown formatting (like ```json). Just the raw JSON list.
+
+Expected JSON format:
+[
+  {{"question": "Question text here...", "answer": "Answer text here..."}},
+  {{"question": "Another question...", "answer": "Another answer..."}}
+]
 
 Notes:
-
 {text}
 """
+    # Calling ask_ai (it will use the new 4096 token limit to ensure it doesn't get cut off)
+    raw_response = ask_ai(prompt) 
+    
+    # Clean up the response in case the AI includes markdown blocks by mistake
+    cleaned_response = raw_response.strip()
+    if cleaned_response.startswith("```json"):
+        cleaned_response = cleaned_response[7:]
+    elif cleaned_response.startswith("```"):
+        cleaned_response = cleaned_response[3:]
+        
+    if cleaned_response.endswith("```"):
+        cleaned_response = cleaned_response[:-3]
+        
+    cleaned_response = cleaned_response.strip()
 
-    return ask_ai(prompt)
+    try:
+        # Convert the string into an actual Python dictionary/list
+        flashcards_data = json.loads(cleaned_response)
+        return {"flashcards": flashcards_data}
+    except json.JSONDecodeError:
+        # Fallback in case the AI fails to generate valid JSON
+        return {"error": "Failed to generate valid flashcards format.", "raw_text": raw_response}

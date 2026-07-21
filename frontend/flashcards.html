@@ -88,6 +88,9 @@
 
     async function loadFlashcards() {
         try {
+            // Grab text if you saved it during upload, otherwise send an empty string
+            const pdfText = localStorage.getItem("extracted_pdf_text") || "";
+
             // Call backend API for flashcard data
             const response = await fetch(`${API_URL}/flashcards`, {
                 method: "POST",
@@ -95,6 +98,7 @@
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({ 
+                    text: pdfText,          // <--- ADDED FIX HERE
                     user_id: "student_1"
                 })
             });
