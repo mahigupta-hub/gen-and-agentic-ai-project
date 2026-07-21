@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pixel Minds | Summary</title>
-
     <link rel="stylesheet" href="summary2.css">
 </head>
 
@@ -14,194 +13,151 @@
 <div class="container">
 
     <!-- Sidebar -->
-
     <div class="sidebar">
-
         <h2 style="color: #a81a4c;">🧠 Pixel Minds</h2>
-
-        <button class="new-chat">
-            + New Chat
-        </button>
+        <button class="new-chat">+ New Chat</button>
 
         <div class="menu">
-
-            <a href="chat.html" class="item">
-                💬 AI Chat
-            </a>
-
-            <a href="summary.html" class="item active">
-                📄 Summary
-            </a>
-
-            <a href="quiz.html" class="item">
-                ❓ Quiz
-            </a>
-
-            <a href="flashcards.html" class="item">
-                🧠 Flashcards
-            </a>
-
+            <a href="chat.html" class="item">💬 AI Chat</a>
+            <a href="summary.html" class="item active">📄 Summary</a>
+            <a href="quiz.html" class="item">❓ Quiz</a>
+            <a href="flashcards.html" class="item">🧠 Flashcards</a>
         </div>
 
-
-       <div class="profile" style="margin-left: 0;">
-
-            <div class="avatar">
-                US
-            </div>
-
+        <div class="profile" style="margin-left: 0;">
+            <div class="avatar">US</div>
             <div>
                 <h4>Student</h4>
                 <p>PDF Uploaded ✅</p>
             </div>
-
         </div>
-
-        </div>
+    </div>
         
-
-
-
-
-
-
     <!-- Main Content -->
-
     <div class="main">
-
         <div class="topbar">
-
             <div>
-
                 <h1> Generate Summary</h1>
-
                 <p class="subtitle">
                     Your uploaded notes have been summarized.
                 </p>
-
             </div>
 
-            <div class="pdf">
-                📄 biology_notes.pdf
+            <div class="pdf" id="pdf-filename">
+                📄 Loading PDF...
             </div>
-
         </div>
 
-
-
-
-
-        <div class="summary-box">
-
-            <!-- Summary -->
-
-            <div class="summary-card">
-
-                <h2>Chapter Summary</h2>
-
-                <p>
-
-                    Photosynthesis is the biological process through which green plants prepare their own food.
-                    It uses sunlight, chlorophyll, water and carbon dioxide.
-                    Oxygen is released as a by-product.
-                    This process is essential because it provides food and oxygen for almost all living organisms.
-
-                </p>
-
+        <!-- Dynamic Summary Container -->
+        <div class="summary-box" id="summary-box">
+            <div class="loading-msg" style="text-align: center; width: 100%; color: #666; padding: 20px;">
+                ⏳ Reading document and generating summary...
             </div>
-
-
-
-            <!-- Key Points -->
-
-            <div class="summary-card">
-
-                <h2>📌 Key Points</h2>
-
-                <ul>
-
-                    <li>Photosynthesis occurs inside chloroplasts.</li>
-
-                    <li>Chlorophyll absorbs sunlight.</li>
-
-                    <li>Carbon dioxide enters through stomata.</li>
-
-                    <li>Water is absorbed from roots.</li>
-
-                    <li>Oxygen is released into the atmosphere.</li>
-
-                </ul>
-
-            </div>
-
-
-
-            <!-- Important Terms -->
-
-            <div class="summary-card">
-
-                <h2>⭐ Important Terms</h2>
-
-                <div class="tags">
-
-                    <span>Chlorophyll</span>
-
-                    <span>Glucose</span>
-
-                    <span>Sunlight</span>
-
-                    <span>Carbon Dioxide</span>
-
-                    <span>Oxygen</span>
-
-                </div>
-
-            </div>
-
-
-
-            <!-- Exam Tip -->
-
-            <div class="summary-card">
-
-                <h2>💡 Exam Tip</h2>
-
-                <p>
-
-                    Remember the photosynthesis equation.
-                    Questions based on this process are frequently asked in exams.
-
-                </p>
-
-            </div>
-
         </div>
-
-
-
-
 
         <!-- Bottom Buttons -->
-
         <div class="bottom-buttons">
-
             <button>📥 Download PDF</button>
-
-            <button>📋 Copy Summary</button>
+            <button id="copy-btn">📋 Copy Summary</button>
 
             <a href="chat.html">
                 <button>💬 Ask AI</button>
             </a>
-
             <a href="index.html">
                 <button>🏠 Home</button>
             </a>
-
         </div>
-
     </div>
 
 </div>
+
+<!-- Central Configuration -->
+<script src="config.js"></script>
+
+<!-- Dynamic Logic Script -->
+<script>
+    const summaryBox = document.getElementById('summary-box');
+    const pdfFilenameDiv = document.getElementById('pdf-filename');
+    const copyBtn = document.getElementById('copy-btn');
+
+    let rawSummaryText = "";
+
+    // Load active PDF name from localStorage
+    const savedPdfName = localStorage.getItem('uploaded_pdf_name') || 'your_notes.pdf';
+    pdfFilenameDiv.innerHTML = `📄 ${savedPdfName}`;
+
+    async function loadSummary() {
+        try {
+            const response = await fetch(`${API_URL}/summary`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ 
+                    user_id: "student_1" 
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to fetch summary from server.");
+            }
+
+            const data = await response.json();
+            
+            // Clear loading text
+            summaryBox.innerHTML = '';
+
+            // Assuming your backend returns a JSON with a "summary" key or just the text
+            const summaryContent = data.summary || data;
+
+            if (!summaryContent) {
+                summaryBox.innerHTML = `<p style="color: #666; text-align: center;">No summary could be generated for this PDF.</p>`;
+                return;
+            }
+
+            // Save the text for the Copy button
+            rawSummaryText = typeof summaryContent === 'string' ? summaryContent : JSON.stringify(summaryContent);
+
+            // Create the summary card dynamically
+            const summaryCard = document.createElement('div');
+            summaryCard.className = 'summary-card';
+            
+            // Simple text rendering (can be expanded if your backend returns structured data like terms/tips)
+            summaryCard.innerHTML = `
+                <h2>Document Summary</h2>
+                <p style="white-space: pre-wrap; line-height: 1.6;">${rawSummaryText}</p>
+            `;
+            
+            summaryBox.appendChild(summaryCard);
+
+        } catch (error) {
+            console.error("Summary Load Error:", error);
+            summaryBox.innerHTML = `
+                <div style="color: #c52c62; text-align: center; width: 100%; padding: 20px;">
+                    ❌ Failed to load summary. Please check if your backend server is running.
+                </div>
+            `;
+        }
+    }
+
+    // Copy Summary to Clipboard functionality
+    copyBtn.addEventListener('click', () => {
+        if (!rawSummaryText) return;
+        
+        navigator.clipboard.writeText(rawSummaryText).then(() => {
+            const originalText = copyBtn.innerHTML;
+            copyBtn.innerHTML = "✅ Copied!";
+            setTimeout(() => {
+                copyBtn.innerHTML = originalText;
+            }, 2000);
+        }).catch(err => {
+            console.error("Failed to copy text: ", err);
+        });
+    });
+
+    // Run on page load
+    document.addEventListener('DOMContentLoaded', loadSummary);
+</script>
 
 </body>
 </html>

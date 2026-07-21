@@ -2,14 +2,10 @@
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Pixel Minds | Flashcards</title>
-
     <link rel="stylesheet" href="flashcard.css">
-
 </head>
 
 <body>
@@ -17,194 +13,136 @@
 <div class="container">
 
     <!-- Sidebar -->
-
     <div class="sidebar">
-
         <h2 style="color: #a81a4c">🧠 Pixel Minds</h2>
-
-        <button class="new-chat">
-            + New Chat
-        </button>
+        <button class="new-chat">+ New Chat</button>
 
         <div class="menu">
-
-            <a href="chat.html" class="item">
-                💬 AI Chat
-            </a>
-
-            <a href="summary.html" class="item">
-                📄 Summary
-            </a>
-
-            <a href="quiz.html" class="item">
-                ❓ Quiz
-            </a>
-
-            <a href="flashcards.html" class="item active">
-                🧠 Flashcards
-            </a>
-
+            <a href="chat.html" class="item">💬 AI Chat</a>
+            <a href="summary.html" class="item">📄 Summary</a>
+            <a href="quiz.html" class="item">❓ Quiz</a>
+            <a href="flashcards.html" class="item active">🧠 Flashcards</a>
         </div>
 
         <div class="profile">
-
-            <div class="avatar">
-                US
-            </div>
-
+            <div class="avatar">US</div>
             <div>
                 <h4>Student</h4>
                 <p>PDF Uploaded ✅</p>
             </div>
-
         </div>
-
     </div>
 
-
-
-
-
     <!-- Main Section -->
-
     <div class="main">
-
         <div class="topbar">
-
             <div>
-
                 <h1 style="color: #85163d;"> AI Flashcards</h1>
-
                 <p class="subtitle">
                     Revise important concepts using AI-generated flashcards.
                 </p>
-
             </div>
 
-            <div class="pdf">
-                📄 biology_notes.pdf
+            <div class="pdf" id="pdf-filename">
+                📄 Loading PDF...
             </div>
-
         </div>
 
-
-
-
-
-        <!-- Flashcards -->
-
-        <div class="flashcards-container">
-
-            <div class="flashcard">
-
-                <h3>Question</h3>
-
-                <p>
-                    What is Photosynthesis?
-                </p>
-
-                <hr>
-
-                <h3>Answer</h3>
-
-                <p>
-                    Photosynthesis is the process by which green plants prepare food using sunlight, water and carbon dioxide.
-                </p>
-
+        <!-- Dynamic Flashcards Container -->
+        <div class="flashcards-container" id="flashcards-container">
+            <div class="loading-msg" style="text-align: center; width: 100%; color: #666;">
+                ⏳ Generating flashcards from your uploaded PDF...
             </div>
-
-
-
-            <div class="flashcard">
-
-                <h3>Question</h3>
-
-                <p>
-                    Which pigment absorbs sunlight?
-                </p>
-
-                <hr>
-
-                <h3>Answer</h3>
-
-                <p>
-                    Chlorophyll.
-                </p>
-
-            </div>
-
-
-
-            <div class="flashcard">
-
-                <h3>Question</h3>
-
-                <p>
-                    Which gas is released during photosynthesis?
-                </p>
-
-                <hr>
-
-                <h3>Answer</h3>
-
-                <p>
-                    Oxygen.
-                </p>
-
-            </div>
-
-
-
-            <div class="flashcard">
-
-                <h3>Question</h3>
-
-                <p>
-                    Where does photosynthesis take place?
-                </p>
-
-                <hr>
-
-                <h3>Answer</h3>
-
-                <p>
-                    Inside chloroplasts present in green plant cells.
-                </p>
-
-            </div>
-
         </div>
-
-
-
-
 
         <!-- Bottom Buttons -->
-
         <div class="quick-actions">
-
-            <button>⬅  Previous</button>
-
-            <button> Next  ➡</button>
+            <button id="prev-btn">⬅ Previous</button>
+            <button id="next-btn">Next ➡</button>
 
             <a href="quiz.html">
                 <button>📝 Take Quiz</button>
             </a>
-
             <a href="summary.html">
                 <button>📄 View Summary</button>
             </a>
-
             <a href="index.html">
                 <button>🏠 Home</button>
             </a>
-
         </div>
-
     </div>
 
 </div>
 
-</body>
+<!-- Configuration File -->
+<script src="config.js"></script>
 
+<!-- Dynamic Logic Script -->
+<script>
+    const flashcardsContainer = document.getElementById('flashcards-container');
+    const pdfFilenameDiv = document.getElementById('pdf-filename');
+
+    // Retrieve active PDF filename if saved in localStorage
+    const savedPdfName = localStorage.getItem('uploaded_pdf_name') || 'your_notes.pdf';
+    pdfFilenameDiv.innerHTML = `📄 ${savedPdfName}`;
+
+    async function loadFlashcards() {
+        try {
+            // Call backend API for flashcard data
+            const response = await fetch(`${API_URL}/flashcards`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ 
+                    user_id: "student_1"
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to fetch flashcards from server.");
+            }
+
+            const data = await response.json();
+            
+            // Clear loading indicator
+            flashcardsContainer.innerHTML = '';
+
+            // Expecting data format: { flashcards: [{ question: "...", answer: "..." }] }
+            const cards = data.flashcards || data;
+
+            if (!cards || cards.length === 0) {
+                flashcardsContainer.innerHTML = `<p style="color: #666;">No flashcards could be generated for this PDF.</p>`;
+                return;
+            }
+
+            // Dynamically create flashcard elements
+            cards.forEach(card => {
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'flashcard';
+                cardDiv.innerHTML = `
+                    <h3>Question</h3>
+                    <p>${card.question}</p>
+                    <hr>
+                    <h3>Answer</h3>
+                    <p>${card.answer}</p>
+                `;
+                flashcardsContainer.appendChild(cardDiv);
+            });
+
+        } catch (error) {
+            console.error("Flashcards Load Error:", error);
+            flashcardsContainer.innerHTML = `
+                <div style="color: #c52c62; text-align: center; width: 100%;">
+                    ❌ Failed to load flashcards. Please check if your backend server is running.
+                </div>
+            `;
+        }
+    }
+
+    // Load flashcards on page start
+    document.addEventListener('DOMContentLoaded', loadFlashcards);
+</script>
+
+</body>
 </html>

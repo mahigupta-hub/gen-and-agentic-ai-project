@@ -2,14 +2,10 @@
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Pixel Minds | Quiz</title>
-
     <link rel="stylesheet" href="quiz.css">
-
 </head>
 
 <body>
@@ -17,228 +13,179 @@
 <div class="container">
 
     <!-- Sidebar -->
-
     <div class="sidebar">
-
         <h2 style="color: #a81a4c;">🧠 Pixel Minds</h2>
-
-        <button class="new-chat">
-            + New Chat
-        </button>
+        <button class="new-chat">+ New Chat</button>
 
         <div class="menu">
-
-            <a href="chat.html" class="item">
-                💬 AI Chat
-            </a>
-
-            <a href="summary.html" class="item">
-                📄 Summary
-            </a>
-
-            <a href="quiz.html" class="item active">
-                ❓ Quiz
-            </a>
-
-            <a href="flashcards.html" class="item">
-                🧠 Flashcards
-            </a>
-
+            <a href="chat.html" class="item">💬 AI Chat</a>
+            <a href="summary.html" class="item">📄 Summary</a>
+            <a href="quiz.html" class="item active">❓ Quiz</a>
+            <a href="flashcards.html" class="item">🧠 Flashcards</a>
         </div>
 
         <div class="profile">
-
-            <div class="avatar">
-                US
-            </div>
-
+            <div class="avatar">US</div>
             <div>
                 <h4>Student</h4>
                 <p>PDF Uploaded ✅</p>
             </div>
-
         </div>
-
     </div>
 
-    <!-- Main -->
-
+    <!-- Main Section -->
     <div class="main">
 
         <div class="topbar">
-
             <div>
-
-                <h1 style="color: #85163d;">  AI Generated Quiz</h1>
-
+                <h1 style="color: #85163d;"> AI Generated Quiz</h1>
                 <p class="subtitle">
                     Test your understanding with automatically generated questions.
                 </p>
-
             </div>
 
-            <div class="pdf">
-                📄 biology_notes.pdf
+            <div class="pdf" id="pdf-filename">
+                📄 Loading PDF...
             </div>
-
         </div>
 
-        <div class="quiz-box">
-
-            <!-- Question 1 -->
-
-            <div class="question">
-
-                <h2>1. What is Photosynthesis?</h2>
-
-                <label class="option">
-                    <input type="radio" name="q1">
-                    A process of food preparation in plants
-                </label>
-
-                <label class="option">
-                    <input type="radio" name="q1">
-                    A method of seed dispersal
-                </label>
-
-                <label class="option">
-                    <input type="radio" name="q1">
-                    Plant reproduction
-                </label>
-
-                <label class="option">
-                    <input type="radio" name="q1">
-                    Water transportation
-                </label>
-
+        <!-- Quiz Container -->
+        <div class="quiz-box" id="quiz-box">
+            <div class="loading-msg" style="text-align: center; width: 100%; color: #666; padding: 20px;">
+                ⏳ Generating quiz from your uploaded PDF...
             </div>
-
-            <!-- Question 2 -->
-
-            <div class="question">
-
-                <h2>2. Which pigment absorbs sunlight?</h2>
-
-                <label class="option">
-                    <input type="radio" name="q2">
-                    Chlorophyll
-                </label>
-
-                <label class="option">
-                    <input type="radio" name="q2">
-                    Hemoglobin
-                </label>
-
-                <label class="option">
-                    <input type="radio" name="q2">
-                    Melanin
-                </label>
-
-                <label class="option">
-                    <input type="radio" name="q2">
-                    Keratin
-                </label>
-
-            </div>
-
-            <!-- Question 3 -->
-
-            <div class="question">
-
-                <h2>3. Which gas is released during photosynthesis?</h2>
-
-                <label class="option">
-                    <input type="radio" name="q3">
-                    Oxygen
-                </label>
-
-                <label class="option">
-                    <input type="radio" name="q3">
-                    Carbon Dioxide
-                </label>
-
-                <label class="option">
-                    <input type="radio" name="q3">
-                    Nitrogen
-                </label>
-
-                <label class="option">
-                    <input type="radio" name="q3">
-                    Hydrogen
-                </label>
-
-            </div>
-
-            <!-- Question 4 -->
-
-            <div class="question">
-
-                <h2>4. Where does photosynthesis occur?</h2>
-
-                <label class="option">
-                    <input type="radio" name="q4">
-                    Chloroplast
-                </label>
-
-                <label class="option">
-                    <input type="radio" name="q4">
-                    Nucleus
-                </label>
-
-                <label class="option">
-                    <input type="radio" name="q4">
-                    Mitochondria
-                </label>
-
-                <label class="option">
-                    <input type="radio" name="q4">
-                    Ribosome
-                </label>
-
-            </div>
-
-            <!-- Score -->
-
-            <div class="score-card">
-
-                <h2>🏆 Quiz Result</h2>
-
-                <p>Your Score: <strong>3 / 4</strong></p>
-
-                <p>Excellent! Keep revising your notes.</p>
-
-            </div>
-
         </div>
 
         <!-- Buttons -->
-
         <div class="buttons">
-
-            <button>✅ Submit Quiz</button>
+            <button id="submit-btn">✅ Submit Quiz</button>
 
             <a href="flashcards.html">
                 <button>🧠 Flashcards</button>
             </a>
-
             <a href="summary.html">
                 <button>📄 Summary</button>
             </a>
-
             <a href="chat.html">
                 <button>💬 Ask AI</button>
             </a>
-
             <a href="index.html">
                 <button>🏠 Home</button>
             </a>
-
         </div>
 
     </div>
 
 </div>
 
-</body>
+<!-- Central Configuration -->
+<script src="config.js"></script>
 
+<!-- Dynamic Logic Script -->
+<script>
+    const quizBox = document.getElementById('quiz-box');
+    const pdfFilenameDiv = document.getElementById('pdf-filename');
+    const submitBtn = document.getElementById('submit-btn');
+
+    let currentQuestions = [];
+
+    // Load active PDF name from localStorage
+    const savedPdfName = localStorage.getItem('uploaded_pdf_name') || 'your_notes.pdf';
+    pdfFilenameDiv.innerHTML = `📄 ${savedPdfName}`;
+
+    async function loadQuiz() {
+        try {
+            const response = await fetch(`${API_URL}/quiz`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ 
+                    user_id: "student_1" 
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to fetch quiz from server.");
+            }
+
+            const data = await response.json();
+            
+            // Format expected: { questions: [ { question: "...", options: ["A", "B", ...], answer: "A" } ] }
+            currentQuestions = data.questions || data;
+
+            quizBox.innerHTML = '';
+
+            if (!currentQuestions || currentQuestions.length === 0) {
+                quizBox.innerHTML = `<p style="color: #666; text-align: center;">No quiz questions could be generated for this PDF.</p>`;
+                return;
+            }
+
+            // Render each question
+            currentQuestions.forEach((q, qIndex) => {
+                const qDiv = document.createElement('div');
+                qDiv.className = 'question';
+
+                let optionsHTML = '';
+                q.options.forEach((opt, optIndex) => {
+                    optionsHTML += `
+                        <label class="option">
+                            <input type="radio" name="q${qIndex}" value="${opt}">
+                            ${opt}
+                        </label>
+                    `;
+                });
+
+                qDiv.innerHTML = `
+                    <h2>${qIndex + 1}. ${q.question}</h2>
+                    ${optionsHTML}
+                `;
+                quizBox.appendChild(qDiv);
+            });
+
+        } catch (error) {
+            console.error("Quiz Load Error:", error);
+            quizBox.innerHTML = `
+                <div style="color: #c52c62; text-align: center; width: 100%; padding: 20px;">
+                    ❌ Failed to load quiz. Please check if your backend server is running.
+                </div>
+            `;
+        }
+    }
+
+    // Evaluate answers and present score
+    function submitQuiz() {
+        if (!currentQuestions || currentQuestions.length === 0) return;
+
+        let score = 0;
+
+        currentQuestions.forEach((q, qIndex) => {
+            const selectedOption = document.querySelector(`input[name="q${qIndex}"]:checked`);
+            if (selectedOption && selectedOption.value === q.answer) {
+                score++;
+            }
+        });
+
+        // Remove old score card if present
+        const oldScoreCard = document.querySelector('.score-card');
+        if (oldScoreCard) oldScoreCard.remove();
+
+        // Create score card element
+        const scoreCard = document.createElement('div');
+        scoreCard.className = 'score-card';
+        scoreCard.innerHTML = `
+            <h2>🏆 Quiz Result</h2>
+            <p>Your Score: <strong>${score} / ${currentQuestions.length}</strong></p>
+            <p>${score === currentQuestions.length ? '🎉 Perfect Score!' : 'Keep revising your notes!'}</p>
+        `;
+
+        quizBox.appendChild(scoreCard);
+        scoreCard.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    submitBtn.addEventListener('click', submitQuiz);
+    document.addEventListener('DOMContentLoaded', loadQuiz);
+</script>
+
+</body>
 </html>
