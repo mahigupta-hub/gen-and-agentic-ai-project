@@ -1,4 +1,7 @@
-const API_URL = "https://gen-and-agentic-ai-project.onrender.com"; 
+// Automatically switch between Localhost and Render
+const API_URL = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+    ? "http://127.0.0.1:8000"
+    : "https://gen-and-agentic-ai-project.onrender.com";
 
 // Global "+ New Chat" Button Handler
 document.addEventListener("DOMContentLoaded", () => {
@@ -11,7 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
             localStorage.removeItem("extracted_pdf_text");
 
             // 2. Redirect to the home page so the user can upload a new PDF
-            window.location.href = "index.html";
+            window.location.href = "upload.html";
         });
     }
 });
