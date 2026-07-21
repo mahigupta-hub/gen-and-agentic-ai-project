@@ -11,7 +11,7 @@ client = Groq(
 # Increased default max_tokens to 4096 to prevent cut-off responses
 def ask_ai(prompt, max_tokens=4096): 
     response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+        model="llama-3.1-8b-instant",
         messages=[
             {
                 "role": "user",
