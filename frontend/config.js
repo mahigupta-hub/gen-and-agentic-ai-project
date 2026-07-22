@@ -18,3 +18,16 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
+
+// Global PDF File Name Display
+document.addEventListener("DOMContentLoaded", () => {
+    const fileNameDisplay = document.getElementById("pdf-filename");
+    
+    if (fileNameDisplay) {
+        // Get the actual file name saved during upload
+        const savedName = localStorage.getItem("uploaded_pdf_name");
+        
+        // Display the name, or a fallback if they haven't uploaded anything
+        fileNameDisplay.textContent = savedName ? `📄 ${savedName}` : "📄 No file uploaded";
+    }
+});

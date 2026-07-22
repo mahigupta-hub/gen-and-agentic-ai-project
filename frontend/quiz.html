@@ -84,19 +84,22 @@
 <!-- Dynamic Logic Script -->
 <script>
     const quizBox = document.getElementById('quiz-box');
-    const pdfFilenameDiv = document.getElementById('pdf-filename');
     const submitBtn = document.getElementById('submit-btn');
 
     let currentQuestions = [];
 
-    // Load active PDF name from localStorage
-    const savedPdfName = localStorage.getItem('uploaded_pdf_name') || 'your_notes.pdf';
-    pdfFilenameDiv.innerHTML = `📄 ${savedPdfName}`;
+    // Note: We removed the manual PDF name loading here because config.js handles it!
 
     async function loadQuiz() {
         try {
-            // Optional: Grab text if you saved it during upload, otherwise send an empty string so the backend auto-pulls from RAG
-            const pdfText = localStorage.getItem("extracted_pdf_text") || "";
+            // 1. Check if a PDF is actually uploaded first
+            const pdfText = localStorage.getItem("extracted_pdf_text");
+
+            if (!pdfText) {
+                quizBox.innerHTML = `<div style="text-align: center; width: 100%; color: #666; padding: 20px;">No notes found. Please <a href="index.html">upload a PDF</a> first.</div>`;
+                submitBtn.style.display = 'none'; // Hide submit button
+                return;
+            }
 
             const response = await fetch(`${API_URL}/quiz`, {
                 method: "POST",
@@ -104,26 +107,34 @@
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({ 
-                    text: pdfText,         // <--- ADDED FIX HERE
+                    text: pdfText,
                     user_id: "student_1" 
                 })
             });
 
-            if (!response.ok) {
-                throw new Error("Failed to fetch quiz from server.");
-            }
-
             const data = await response.json();
             
+            // 2. Safely handle backend errors (like Groq Rate Limits)
+            if (data.status === "error" || data.error) {
+                quizBox.innerHTML = `<div style="color: #c52c62; text-align: center; width: 100%; padding: 20px;">❌ ${data.message || data.error}</div>`;
+                submitBtn.style.display = 'none'; // Hide submit button
+                return;
+            }
+
             // Format expected: { questions: [ { question: "...", options: ["A", "B", ...], answer: "A" } ] }
             currentQuestions = data.questions || data;
 
             quizBox.innerHTML = '';
 
-            if (!currentQuestions || currentQuestions.length === 0) {
+            // 3. Ensure currentQuestions is actually an array before looping
+            if (!Array.isArray(currentQuestions) || currentQuestions.length === 0) {
                 quizBox.innerHTML = `<p style="color: #666; text-align: center;">No quiz questions could be generated for this PDF.</p>`;
+                submitBtn.style.display = 'none';
                 return;
             }
+
+            // Ensure submit button is visible if questions load successfully
+            submitBtn.style.display = 'inline-block';
 
             // Render each question
             currentQuestions.forEach((q, qIndex) => {
@@ -154,6 +165,7 @@
                     ❌ Failed to load quiz. Please check if your backend server is running.
                 </div>
             `;
+            submitBtn.style.display = 'none';
         }
     }
 

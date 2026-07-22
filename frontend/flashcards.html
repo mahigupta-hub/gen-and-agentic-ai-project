@@ -80,16 +80,16 @@
 <!-- Dynamic Logic Script -->
 <script>
     const flashcardsContainer = document.getElementById('flashcards-container');
-    const pdfFilenameDiv = document.getElementById('pdf-filename');
-
-    // Retrieve active PDF filename if saved in localStorage
-    const savedPdfName = localStorage.getItem('uploaded_pdf_name') || 'your_notes.pdf';
-    pdfFilenameDiv.innerHTML = `📄 ${savedPdfName}`;
-
+    
     async function loadFlashcards() {
         try {
-            // Grab text if you saved it during upload, otherwise send an empty string
-            const pdfText = localStorage.getItem("extracted_pdf_text") || "";
+            // 1. Check if a PDF is actually uploaded first
+            const pdfText = localStorage.getItem("extracted_pdf_text");
+            
+            if (!pdfText) {
+                flashcardsContainer.innerHTML = `<div style="text-align: center; width: 100%; color: #666;">No notes found. Please <a href="index.html">upload a PDF</a> first.</div>`;
+                return;
+            }
 
             // Call backend API for flashcard data
             const response = await fetch(`${API_URL}/flashcards`, {
@@ -98,25 +98,28 @@
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({ 
-                    text: pdfText,          // <--- ADDED FIX HERE
+                    text: pdfText,
                     user_id: "student_1"
                 })
             });
 
-            if (!response.ok) {
-                throw new Error("Failed to fetch flashcards from server.");
-            }
-
             const data = await response.json();
             
+            // 2. Safely handle backend errors (like Groq Rate Limits) so the page doesn't crash
+            if (data.status === "error" || data.error) {
+                flashcardsContainer.innerHTML = `<div style="color: #c52c62; text-align: center; width: 100%;">❌ ${data.message || data.error}</div>`;
+                return;
+            }
+
             // Clear loading indicator
             flashcardsContainer.innerHTML = '';
 
             // Expecting data format: { flashcards: [{ question: "...", answer: "..." }] }
             const cards = data.flashcards || data;
 
-            if (!cards || cards.length === 0) {
-                flashcardsContainer.innerHTML = `<p style="color: #666;">No flashcards could be generated for this PDF.</p>`;
+            // 3. Ensure cards is actually a list before trying to loop through it
+            if (!Array.isArray(cards) || cards.length === 0) {
+                flashcardsContainer.innerHTML = `<p style="color: #666; text-align: center; width: 100%;">No flashcards could be generated for this PDF.</p>`;
                 return;
             }
 

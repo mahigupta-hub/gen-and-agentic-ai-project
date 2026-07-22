@@ -108,7 +108,7 @@
 
         // 2. Package the file to send to FastAPI
         const formData = new FormData();
-        formData.append("file", file); // Perfectly matches your FastAPI parameter: file: UploadFile
+        formData.append("file", file);
 
         // 3. Update the button so the user knows it's working
         uploadBtn.innerText = "Uploading... ⏳";
@@ -122,6 +122,23 @@
             });
 
             if (response.ok) {
+                const data = await response.json();
+
+                // --- NEW FIX: Save details to localStorage for the other pages ---
+                
+                // Save the file name so config.js can show it everywhere
+                localStorage.setItem("uploaded_pdf_name", file.name);
+
+                // Save the text so quiz/summary/flashcards know a file exists.
+                // If your backend sends the text back, it uses it. Otherwise, it saves a placeholder flag.
+                if (data.extracted_text) {
+                    localStorage.setItem("extracted_pdf_text", data.extracted_text);
+                } else {
+                    localStorage.setItem("extracted_pdf_text", "PDF uploaded successfully. Backend is handling the text.");
+                }
+
+                // -----------------------------------------------------------------
+
                 alert("PDF successfully uploaded and processed! 🚀");
                 // Automatically redirect them to the chat page
                 window.location.href = "chat.html"; 

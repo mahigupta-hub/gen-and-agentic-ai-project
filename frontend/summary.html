@@ -77,19 +77,22 @@
 <!-- Dynamic Logic Script -->
 <script>
     const summaryBox = document.getElementById('summary-box');
-    const pdfFilenameDiv = document.getElementById('pdf-filename');
     const copyBtn = document.getElementById('copy-btn');
 
     let rawSummaryText = "";
 
-    // Load active PDF name from localStorage
-    const savedPdfName = localStorage.getItem('uploaded_pdf_name') || 'your_notes.pdf';
-    pdfFilenameDiv.innerHTML = `📄 ${savedPdfName}`;
+    // Note: We removed the manual PDF name loading here because config.js handles it!
 
     async function loadSummary() {
         try {
-            // Grab text if saved during upload, otherwise send empty string to let backend use RAG index
-            const pdfText = localStorage.getItem("extracted_pdf_text") || "";
+            // 1. Check if a PDF is actually uploaded first
+            const pdfText = localStorage.getItem("extracted_pdf_text");
+
+            if (!pdfText) {
+                summaryBox.innerHTML = `<div style="text-align: center; width: 100%; color: #666; padding: 20px;">No notes found. Please <a href="index.html">upload a PDF</a> first.</div>`;
+                copyBtn.style.display = 'none'; // Hide copy button
+                return;
+            }
 
             const response = await fetch(`${API_URL}/summary`, {
                 method: "POST",
@@ -97,17 +100,20 @@
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({ 
-                    text: pdfText,          // <--- ADDED FIX HERE
+                    text: pdfText,
                     user_id: "student_1" 
                 })
             });
 
-            if (!response.ok) {
-                throw new Error("Failed to fetch summary from server.");
-            }
-
             const data = await response.json();
             
+            // 2. Safely handle backend errors (like Groq Rate Limits)
+            if (data.status === "error" || data.error) {
+                summaryBox.innerHTML = `<div style="color: #c52c62; text-align: center; width: 100%; padding: 20px;">❌ ${data.message || data.error}</div>`;
+                copyBtn.style.display = 'none'; // Hide copy button
+                return;
+            }
+
             // Clear loading text
             summaryBox.innerHTML = '';
 
@@ -116,8 +122,12 @@
 
             if (!summaryContent) {
                 summaryBox.innerHTML = `<p style="color: #666; text-align: center;">No summary could be generated for this PDF.</p>`;
+                copyBtn.style.display = 'none';
                 return;
             }
+
+            // Ensure copy button is visible if summary loads successfully
+            copyBtn.style.display = 'inline-block';
 
             // Save the text for the Copy button
             rawSummaryText = typeof summaryContent === 'string' ? summaryContent : JSON.stringify(summaryContent, null, 2);
@@ -140,6 +150,7 @@
                     ❌ Failed to load summary. Please check if your backend server is running.
                 </div>
             `;
+            copyBtn.style.display = 'none';
         }
     }
 
