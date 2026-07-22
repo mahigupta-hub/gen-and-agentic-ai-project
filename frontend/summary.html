@@ -81,17 +81,19 @@
 
     let rawSummaryText = "";
 
-    // Note: We removed the manual PDF name loading here because config.js handles it!
-
     async function loadSummary() {
         try {
             // 1. Check if a PDF is actually uploaded first
-            const pdfText = localStorage.getItem("extracted_pdf_text");
+            let pdfText = localStorage.getItem("extracted_pdf_text");
 
             if (!pdfText) {
                 summaryBox.innerHTML = `<div style="text-align: center; width: 100%; color: #666; padding: 20px;">No notes found. Please <a href="index.html">upload a PDF</a> first.</div>`;
-                copyBtn.style.display = 'none'; // Hide copy button
+                copyBtn.style.display = 'none';
                 return;
+            }
+
+            if (pdfText === "PDF uploaded successfully. Backend is handling the text.") {
+                pdfText = "";
             }
 
             const response = await fetch(`${API_URL}/summary`, {
@@ -107,17 +109,16 @@
 
             const data = await response.json();
             
-            // 2. Safely handle backend errors (like Groq Rate Limits)
+            // 2. Safely handle backend errors
             if (data.status === "error" || data.error) {
                 summaryBox.innerHTML = `<div style="color: #c52c62; text-align: center; width: 100%; padding: 20px;">❌ ${data.message || data.error}</div>`;
-                copyBtn.style.display = 'none'; // Hide copy button
+                copyBtn.style.display = 'none';
                 return;
             }
 
             // Clear loading text
             summaryBox.innerHTML = '';
 
-            // Extracts summary string from response object
             const summaryContent = data.summary || data.data || data;
 
             if (!summaryContent) {
@@ -126,13 +127,10 @@
                 return;
             }
 
-            // Ensure copy button is visible if summary loads successfully
             copyBtn.style.display = 'inline-block';
 
-            // Save the text for the Copy button
             rawSummaryText = typeof summaryContent === 'string' ? summaryContent : JSON.stringify(summaryContent, null, 2);
 
-            // Create the summary card dynamically
             const summaryCard = document.createElement('div');
             summaryCard.className = 'summary-card';
             
@@ -154,7 +152,6 @@
         }
     }
 
-    // Copy Summary to Clipboard functionality
     copyBtn.addEventListener('click', () => {
         if (!rawSummaryText) return;
         
@@ -169,7 +166,6 @@
         });
     });
 
-    // Run on page load
     document.addEventListener('DOMContentLoaded', loadSummary);
 </script>
 

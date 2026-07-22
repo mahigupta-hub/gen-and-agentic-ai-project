@@ -80,15 +80,19 @@
 <!-- Dynamic Logic Script -->
 <script>
     const flashcardsContainer = document.getElementById('flashcards-container');
-    
+
     async function loadFlashcards() {
         try {
             // 1. Check if a PDF is actually uploaded first
-            const pdfText = localStorage.getItem("extracted_pdf_text");
-            
+            let pdfText = localStorage.getItem("extracted_pdf_text");
+
             if (!pdfText) {
-                flashcardsContainer.innerHTML = `<div style="text-align: center; width: 100%; color: #666;">No notes found. Please <a href="index.html">upload a PDF</a> first.</div>`;
+                flashcardsContainer.innerHTML = `<div style="text-align: center; width: 100%; color: #666; padding: 20px;">No notes found. Please <a href="index.html">upload a PDF</a> first.</div>`;
                 return;
+            }
+
+            if (pdfText === "PDF uploaded successfully. Backend is handling the text.") {
+                pdfText = "";
             }
 
             // Call backend API for flashcard data
@@ -105,9 +109,9 @@
 
             const data = await response.json();
             
-            // 2. Safely handle backend errors (like Groq Rate Limits) so the page doesn't crash
+            // 2. Safely handle backend errors (like Groq Rate Limits)
             if (data.status === "error" || data.error) {
-                flashcardsContainer.innerHTML = `<div style="color: #c52c62; text-align: center; width: 100%;">❌ ${data.message || data.error}</div>`;
+                flashcardsContainer.innerHTML = `<div style="color: #c52c62; text-align: center; width: 100%; padding: 20px;">❌ ${data.message || data.error}</div>`;
                 return;
             }
 
@@ -117,7 +121,7 @@
             // Expecting data format: { flashcards: [{ question: "...", answer: "..." }] }
             const cards = data.flashcards || data;
 
-            // 3. Ensure cards is actually a list before trying to loop through it
+            // 3. Ensure cards is an array before looping
             if (!Array.isArray(cards) || cards.length === 0) {
                 flashcardsContainer.innerHTML = `<p style="color: #666; text-align: center; width: 100%;">No flashcards could be generated for this PDF.</p>`;
                 return;
@@ -140,7 +144,7 @@
         } catch (error) {
             console.error("Flashcards Load Error:", error);
             flashcardsContainer.innerHTML = `
-                <div style="color: #c52c62; text-align: center; width: 100%;">
+                <div style="color: #c52c62; text-align: center; width: 100%; padding: 20px;">
                     ❌ Failed to load flashcards. Please check if your backend server is running.
                 </div>
             `;

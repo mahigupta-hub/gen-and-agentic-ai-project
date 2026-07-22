@@ -93,12 +93,16 @@
     async function loadQuiz() {
         try {
             // 1. Check if a PDF is actually uploaded first
-            const pdfText = localStorage.getItem("extracted_pdf_text");
+            let pdfText = localStorage.getItem("extracted_pdf_text");
 
             if (!pdfText) {
                 quizBox.innerHTML = `<div style="text-align: center; width: 100%; color: #666; padding: 20px;">No notes found. Please <a href="index.html">upload a PDF</a> first.</div>`;
                 submitBtn.style.display = 'none'; // Hide submit button
                 return;
+            }
+
+            if (pdfText === "PDF uploaded successfully. Backend is handling the text.") {
+                pdfText = "";
             }
 
             const response = await fetch(`${API_URL}/quiz`, {
